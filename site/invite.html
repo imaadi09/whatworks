@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+  Target of the SMS invite the app sends from contact_picker_service.dart:
+  "Hey <name>! I use WhatWorks to manage tasks and collaborate. Join me: https://whatworks.pro/invite"
+  Whoever lands here has been invited by someone, so the page answers
+  "what is this and what do I do next" before anything else.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You have been invited to WhatWorks</title>
+<meta name="description" content="Someone invited you to WhatWorks. Install the app, sign in with the mobile number they invited, and their tasks are waiting for you.">
+<link rel="icon" href="/assets/img/app-icon.png">
+<link rel="stylesheet" href="/assets/css/site.css?v=3">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-ico" src="/assets/img/app-icon.png" alt=""> WhatWorks</a>
+    <nav class="site">
+      <a href="/tasks">Tasks</a>
+      <a href="/sales">Sales</a>
+      <a href="/crm">CRM</a>
+      <a href="/upgrade">Pricing</a>
+      <a href="/help">Help</a>
+      <a href="/account">My Account</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>You have been invited</h1>
+    <p class="tagline">
+      Someone you work with uses WhatWorks to assign and track jobs, and they
+      have added your number to theirs.
+    </p>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+
+    <div class="card">
+      <h2>What to do</h2>
+      <ol>
+        <li>
+          <strong>Install WhatWorks on Android.</strong>
+          <!-- TODO: replace with the Play Store listing URL once published. -->
+          The Play Store link is coming soon — until then, ask the person who
+          invited you to send you the app file.
+        </li>
+        <li>
+          <strong>Sign in with the mobile number they invited.</strong> You will
+          get a one-time password by SMS. There is no password to create and
+          nothing to configure.
+        </li>
+        <li>
+          <strong>Your tasks are already there.</strong> Anything assigned to
+          your number before you joined links to your account automatically the
+          first time you sign in.
+        </li>
+      </ol>
+      <p class="notice info">
+        Use the same number you were invited on. A different number creates a
+        separate account, and the work assigned to you will not appear in it.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>What WhatWorks is</h2>
+      <div class="grid">
+        <div class="feature">
+          <div class="ico">👥</div>
+          <h3>Work assigned to you</h3>
+          <p>See what you have been given, what stage it is at, and what is due next.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">💬</div>
+          <h3>A chat on every task</h3>
+          <p>Ask and answer in a thread attached to the job, so nothing is lost in general chat.</p>
+        </div>
+        <div class="feature">
+          <div class="ico">⏰</div>
+          <h3>Follow-ups</h3>
+          <p>Set the next touchpoint and get reminded when it is due.</p>
+        </div>
+      </div>
+      <p class="small muted">
+        Joining is free. Premium is an optional paid plan for higher limits, and
+        the person who invited you does not pay for you either way.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Not sure who invited you?</h2>
+      <p class="muted">
+        Invites are sent by SMS from the phone of the person inviting you, so the
+        message came from a number you already know. If it does not look
+        familiar, you can ignore it safely — nothing happens until you install
+        the app and sign in yourself. You can also write to
+        <a href="mailto:support@whatworks.pro">support@whatworks.pro</a>.
+      </p>
+      <p>
+        <a class="btn ghost" href="/">About WhatWorks</a>
+        <a class="btn ghost" href="/privacy">Privacy Policy</a>
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="links">
+      <a href="/help">Help</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/refund">Refunds</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="legal-name">
+      © <span id="year">2026</span> [[LEGAL_NAME]]. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

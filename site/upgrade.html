@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhatWorks Premium — Plans &amp; Pricing</title>
+<meta name="description" content="WhatWorks Premium pricing. Pick a duration, pay securely with Razorpay, and Premium activates on the mobile number you sign in with.">
+<link rel="icon" href="/assets/img/app-icon.png">
+<link rel="stylesheet" href="/assets/css/site.css?v=3">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-ico" src="/assets/img/app-icon.png" alt=""> WhatWorks</a>
+    <nav class="site">
+      <a href="/tasks">Tasks</a>
+      <a href="/sales">Sales</a>
+      <a href="/crm">CRM</a>
+      <a href="/upgrade" aria-current="page">Pricing</a>
+      <a href="/help">Help</a>
+      <a href="/account">My Account</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero-premium">
+  <div class="wrap hero-premium-grid">
+    <div class="hero-premium-copy">
+      <div class="hero-premium-brand">
+        <img src="/assets/img/app-icon.png" alt=""> WhatWorks
+      </div>
+      <h1>WhatWorks Premium.</h1>
+      <p>Higher limits. More power. Same simple app.</p>
+    </div>
+    <div class="hero-cards">
+      <div class="hero-includes">
+        <h2>Premium includes:</h2>
+        <ul>
+          <li>500 active cards created by you — in every module</li>
+          <li>500 active cards assigned to you, per creator</li>
+          <li>Up to 10 assignees per card</li>
+          <li>Up to 5 teams per module</li>
+          <li>Export to CSV &amp; PDF</li>
+          <li>Interactive reports &amp; analytics</li>
+          <li class="strong">Auto back up</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div class="wrap">
+
+    <div id="pageNotice" class="notice info hidden"></div>
+
+    <!-- Plan comparison first: like a normal pricing page, people compare
+         before they buy. The sign-in and payment flow follows below. -->
+    <div class="card">
+      <h2>Compare plans</h2>
+      <div class="table-scroll">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th>Plans</th>
+              <th>
+                Free
+                <div class="plan-price">₹0</div>
+              </th>
+              <th class="premium-col">
+                Premium
+                <div class="plan-price">₹149 / module / month + GST</div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Price</td>
+              <td>Free</td>
+              <td class="premium-col">₹149/mo or ₹1,188/yr per module + GST</td>
+            </tr>
+            <tr>
+              <td>Active cards — as creator</td>
+              <td>100</td>
+              <td class="premium-col">500</td>
+            </tr>
+            <tr>
+              <td>Active cards — as assignee</td>
+              <td>10 per creator</td>
+              <td class="premium-col">500 per creator</td>
+            </tr>
+            <tr>
+              <td>Assignees per card</td>
+              <td>Up to 3</td>
+              <td class="premium-col">Up to 10</td>
+            </tr>
+            <tr>
+              <td>Teams per module</td>
+              <td>1</td>
+              <td class="premium-col">Up to 5</td>
+            </tr>
+            <tr>
+              <td>Auto backup</td>
+              <td><span class="dash">✕</span></td>
+              <td class="premium-col"><span class="tick">✓</span></td>
+            </tr>
+            <tr>
+              <td>Dashboard &amp; Reports</td>
+              <td>View only</td>
+              <td class="premium-col"><span class="tick">✓</span> Interactive + export</td>
+            </tr>
+            <tr>
+              <td>Export to CSV &amp; PDF</td>
+              <td><span class="dash">✕</span></td>
+              <td class="premium-col"><span class="tick">✓</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-bottom:0">
+        Pricing is per user, per module, plus GST — tick the modules you need
+        below. No auto-renewal: you pay once per duration, and buying again
+        extends your expiry date.
+      </p>
+    </div>
+
+    <!-- 1. Sign in. Identity must be established before an order exists: the
+         plan is granted to the uid behind the OTP session, never to a number
+         typed into a form. -->
+    <div class="card" id="loginCard">
+      <h2>Step 1 — Sign in with your mobile number</h2>
+      <p class="muted small">
+        Use the same number you use in the WhatWorks app. Premium activates on
+        that account.
+      </p>
+      <div class="field">
+        <label for="phoneInput">Mobile number</label>
+        <input id="phoneInput" type="tel" inputmode="numeric" autocomplete="tel"
+               placeholder="9876543210">
+        <div class="hint">Indian numbers get +91 automatically.</div>
+      </div>
+      <button class="btn" id="sendBtn" type="button">Send code</button>
+      <div id="otpRow" class="hidden" style="margin-top:16px">
+        <div class="field">
+          <label for="otpInput">6-digit code</label>
+          <input id="otpInput" type="text" inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" placeholder="______">
+        </div>
+        <button class="btn" id="verifyBtn" type="button">Verify &amp; continue</button>
+      </div>
+      <div id="authNotice" class="notice info hidden" style="margin-top:14px"></div>
+      <div id="recaptcha"></div>
+    </div>
+
+    <!-- Signed-in summary: shows what the purchase will do to the plan the user
+         already has, so a renewal never looks like a reset. -->
+    <div class="card hidden" id="whoCard">
+      <h2>Signed in — your modules today</h2>
+      <p>
+        <strong id="whoPhone">—</strong><br>
+        <span class="muted small" id="whoPlan">Checking your plan…</span>
+      </p>
+      <button class="btn ghost" type="button" onclick="WW.signOut()">Sign out</button>
+    </div>
+
+    <div class="card">
+      <h2>Step 2 — Pick modules; each gets its own plan &amp; duration</h2>
+
+      <label>Modules
+        <span class="muted small">— tick what you need, then choose a plan and duration under each; your current plan and expiry is shown there too</span>
+      </label>
+      <div class="modules" id="modulePicker"></div>
+
+      <div class="totals" id="totals">
+        <div id="itemRows"></div>
+        <div class="row"><span>Subtotal (excl. GST)</span><span id="subVal">—</span></div>
+        <div class="row hidden" id="rowGst"><span id="gstLabel">GST</span><span id="gstVal">—</span></div>
+        <div class="row grand"><span>Total payable (incl. GST)</span><span id="totalVal">—</span></div>
+      </div>
+
+      <p class="hint" id="gstNote">
+        Prices are per module. GST is added on top, and you are charged once
+        for the duration you pick.
+      </p>
+
+      <div id="payNotice" class="notice info hidden" style="margin-top:14px"></div>
+
+      <button class="btn block" id="payBtn" type="button" disabled style="margin-top:14px">
+        Sign in to continue
+      </button>
+      <p class="hint" style="text-align:center">
+        Payments are processed by Razorpay. We never see your card details.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Enterprise / Organisation</h2>
+      <p class="muted">
+        Getting your whole organisation onto WhatWorks? Write to us — we will
+        help with users, modules and teams, and answer any pricing questions.
+      </p>
+      <a class="btn ghost" href="/contact">Contact us</a>
+    </div>
+
+    <div class="card">
+      <h2>Good to know</h2>
+      <ul>
+        <li><strong>No auto-renewal.</strong> You are charged once, for the
+            duration you pick. Nothing recurs.</li>
+        <li><strong>Renewing extends.</strong> Buying again while you still have
+            time left adds to your existing expiry date rather than replacing
+            it.</li>
+        <li><strong>Activation is automatic.</strong> Your plan is switched on by
+            our payment provider's confirmation, usually within seconds — even if
+            you close this tab.</li>
+        <li>See the <a href="/refund">Refund &amp; Cancellation Policy</a> and
+            <a href="/terms">Terms of Service</a>.</li>
+      </ul>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="links">
+      <a href="/help">Help</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/refund">Refunds</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="legal-name">
+      © <span id="year">2026</span> [[LEGAL_NAME]]. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="/assets/js/firebase-init.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/plans.js"></script>
+<script src="/assets/js/checkout.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+(function () {
+  var catalogue = null;
+  var selectedModules = [];     // ids of the ticked modules
+  var moduleChoice = {};        // moduleId -> { planId, months }
+  var signedInUser = null;
+  var moduleStatus = {};        // moduleId -> { active, type, expiry }
+
+  var modulePicker = document.getElementById('modulePicker');
+  var payBtn = document.getElementById('payBtn');
+  var payNotice = document.getElementById('payNotice');
+  var pageNotice = document.getElementById('pageNotice');
+
+  var TIER_NAMES = { premium: 'Premium', business: 'Business', enterprise: 'Enterprise' };
+
+  function moduleLabel(id) {
+    var modules = (catalogue && catalogue.modules) || WW.MODULES;
+    for (var i = 0; i < modules.length; i++) {
+      if (modules[i].id === id) return modules[i].label;
+    }
+    return id;
+  }
+
+  // planId -> { label, durations: { months -> duration price } }
+  function priceTable() {
+    var t = {};
+    ((catalogue && catalogue.plans) || []).forEach(function (p) {
+      t[p.id] = { label: p.label, durations: {} };
+      (p.durations || []).forEach(function (d) {
+        t[p.id].durations[d.durationMonths] = d;
+      });
+    });
+    return t;
+  }
+
+  // The basket: each ticked module priced at its OWN plan + duration.
+  function grandTotals() {
+    var t = priceTable();
+    var out = { base: 0, gst: 0, total: 0, rows: [] };
+    selectedModules.forEach(function (id) {
+      var c = moduleChoice[id] || { planId: 'premium', months: 1 };
+      var plan = t[c.planId];
+      var d = plan && plan.durations[c.months];
+      if (!d) return;
+      out.base += d.baseAmount;
+      out.gst += d.gstAmount;
+      out.total += d.totalAmount;
+      out.rows.push({ id: id, planLabel: plan.label, d: d });
+    });
+    return out;
+  }
+
+  function renderTotals() {
+    var rowsEl = document.getElementById('itemRows');
+    var sub = document.getElementById('subVal');
+    var tot = document.getElementById('totalVal');
+    var rowGst = document.getElementById('rowGst');
+
+    rowsEl.innerHTML = '';
+    var g = grandTotals();
+    g.rows.forEach(function (r) {
+      var row = document.createElement('div');
+      row.className = 'row';
+      var left = document.createElement('span');
+      left.textContent =
+        moduleLabel(r.id) + ' — ' + r.planLabel + ' · ' + r.d.label;
+      var right = document.createElement('span');
+      right.textContent = WW.formatPaise(r.d.totalAmount);
+      row.appendChild(left);
+      row.appendChild(right);
+      rowsEl.appendChild(row);
+    });
+
+    if (!g.rows.length) {
+      sub.textContent = tot.textContent = '—';
+      rowGst.classList.add('hidden');
+      return;
+    }
+    sub.textContent = WW.formatPaise(g.base);
+    tot.textContent = WW.formatPaise(g.total);
+
+    if (catalogue && catalogue.gstEnabled) {
+      rowGst.classList.remove('hidden');
+      document.getElementById('gstLabel').textContent =
+        'GST ' + catalogue.gstRatePercent + '%';
+      document.getElementById('gstVal').textContent =
+        WW.formatPaise(g.gst);
+      document.getElementById('gstNote').textContent =
+        'GST (' + catalogue.gstRatePercent + '%) is added to the price. Each ' +
+        'module is charged once, for its own plan and duration.';
+    } else {
+      rowGst.classList.add('hidden');
+      document.getElementById('gstNote').textContent =
+        'Each module is charged once, for its own plan and duration.';
+    }
+  }
+
+  function moduleStatusText(id) {
+    if (!signedInUser) return 'Sign in to see your current plan';
+    var s = moduleStatus[id];
+    if (!s || !s.active) {
+      return s && s.expiry
+        ? 'Expired on ' + WW.formatDate(s.expiry) + ' — buying starts fresh from today'
+        : 'Free — no active plan';
+    }
+    return (TIER_NAMES[s.type] || s.type) + ' until ' +
+      WW.formatDate(s.expiry) + ' — renewing extends this date';
+  }
+
+  function renderModulePicker() {
+    modulePicker.innerHTML = '';
+    var keep = selectedModules.slice();
+    selectedModules = [];
+    var modules = (catalogue && catalogue.modules) || WW.MODULES;
+    var plans = (catalogue && catalogue.plans) || [];
+    var durations =
+      (plans[0] && plans[0].durations) ||
+      [
+        { durationMonths: 1, label: 'Monthly' },
+        { durationMonths: 12, label: 'Annual' },
+      ];
+
+    modules.forEach(function (m, i) {
+      var opt = document.createElement('div');
+      opt.className = 'module-opt';
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      // Keep the user's ticks across re-renders; first paint defaults to
+      // Task Management only.
+      cb.checked = keep.length ? keep.indexOf(m.id) !== -1 : i === 0;
+
+      var txt = document.createElement('span');
+      txt.className = 'mod-txt';
+      var name = document.createElement('span');
+      name.textContent = m.label;
+      var status = document.createElement('span');
+      status.className = 'mod-status';
+      status.textContent = moduleStatusText(m.id);
+      txt.appendChild(name);
+      txt.appendChild(status);
+
+      // Every subscription moves on its own plan and its own dates.
+      moduleChoice[m.id] =
+        moduleChoice[m.id] || { planId: 'premium', months: 1 };
+      var choice = document.createElement('div');
+      choice.className = 'mod-choice';
+      var planSel = document.createElement('select');
+      plans.forEach(function (p) {
+        var o = document.createElement('option');
+        o.value = p.id;
+        o.textContent = p.label;
+        planSel.appendChild(o);
+      });
+      planSel.value = moduleChoice[m.id].planId;
+      var durSel = document.createElement('select');
+      durations.forEach(function (d) {
+        var o = document.createElement('option');
+        o.value = String(d.durationMonths);
+        o.textContent = d.label;
+        durSel.appendChild(o);
+      });
+      durSel.value = String(moduleChoice[m.id].months);
+      planSel.addEventListener('change', function () {
+        moduleChoice[m.id].planId = planSel.value;
+        renderTotals();
+        updatePayButton();
+      });
+      durSel.addEventListener('change', function () {
+        moduleChoice[m.id].months = Number(durSel.value);
+        renderTotals();
+        updatePayButton();
+      });
+      choice.appendChild(planSel);
+      choice.appendChild(durSel);
+
+      opt.appendChild(cb);
+      opt.appendChild(txt);
+      opt.appendChild(choice);
+
+      cb.addEventListener('change', function () {
+        opt.classList.toggle('checked', cb.checked);
+        selectedModules = selectedModules.filter(function (id) {
+          return id !== m.id;
+        });
+        if (cb.checked) selectedModules.push(m.id);
+        renderTotals();
+        updatePayButton();
+      });
+      modulePicker.appendChild(opt);
+      if (cb.checked) {
+        opt.classList.add('checked');
+        selectedModules.push(m.id);
+      }
+    });
+  }
+
+  function updatePayButton() {
+    if (!signedInUser) {
+      payBtn.disabled = true;
+      payBtn.textContent = 'Sign in to continue';
+      return;
+    }
+    if (!selectedModules.length) {
+      payBtn.disabled = true;
+      payBtn.textContent = 'Select at least one module';
+      return;
+    }
+    payBtn.disabled = false;
+    payBtn.textContent = 'Pay ' + WW.formatPaise(grandTotals().total);
+  }
+
+  function showPlanStatus(user) {
+    var el = document.getElementById('whoPlan');
+    WW.db.collection('users').doc(user.uid).get().then(function (snap) {
+      if (!snap.exists) {
+        el.textContent =
+          'No WhatWorks account found for this number yet — install the app and ' +
+          'sign in once, then come back.';
+        moduleStatus = {};
+        renderModulePicker();
+        return;
+      }
+      var d = snap.data();
+      var now = new Date();
+      var mp = d.modulePlans || {};
+      moduleStatus = {};
+      var bits = [];
+      var modules = (catalogue && catalogue.modules) || WW.MODULES;
+      modules.forEach(function (m) {
+        var e = mp[m.id] || {};
+        var expiry = e.expiryDate ? e.expiryDate.toDate() : null;
+        var active = !!expiry && expiry > now && e.planType !== 'basic';
+        moduleStatus[m.id] = {
+          active: active,
+          type: e.planType || 'basic',
+          expiry: expiry,
+        };
+        bits.push(
+          m.label + ': ' +
+          (active
+            ? (TIER_NAMES[e.planType] || e.planType) + ' until ' + WW.formatDate(expiry)
+            : 'Free')
+        );
+      });
+      el.textContent = bits.join(' · ');
+      renderModulePicker();
+      renderTotals();
+    }).catch(function (err) {
+      console.error('[WW] plan lookup failed', err);
+      el.textContent = 'Could not read your current plan.';
+    });
+  }
+
+  function onSignedIn(user) {
+    signedInUser = user;
+    document.getElementById('loginCard').classList.add('hidden');
+    var who = document.getElementById('whoCard');
+    who.classList.remove('hidden');
+    document.getElementById('whoPhone').textContent = user.phoneNumber || '';
+    showPlanStatus(user);
+    updatePayButton();
+  }
+
+  payBtn.addEventListener('click', function () {
+    payBtn.disabled = true;
+    WW.startCheckout({
+      items: selectedModules.map(function (id) {
+        var c = moduleChoice[id] || { planId: 'premium', months: 1 };
+        return { module: id, planId: c.planId, durationMonths: c.months };
+      }),
+      onStatus: function (text, kind) {
+        WW.notice(payNotice, text, kind);
+      },
+      onActivated: function (payment) {
+        WW.notice(
+          payNotice,
+          'Your modules are active. Invoice ' +
+            (payment.invoiceNo || '') +
+            '. Reopen the WhatWorks app to see it.',
+          'ok'
+        );
+        payBtn.textContent = 'Activated';
+        showPlanStatus(signedInUser);
+      },
+      onFailed: function (text) {
+        WW.notice(payNotice, text, 'error');
+        payBtn.disabled = false;
+        updatePayButton();
+      },
+    });
+  });
+
+  // Prices first: the page must show numbers even before anyone signs in.
+  WW.loadCatalogue().then(function (result) {
+    catalogue = result.catalogue;
+    renderModulePicker();
+    renderTotals();
+    updatePayButton();
+    if (!result.fromServer && WW.configured) {
+      WW.notice(
+        pageNotice,
+        'Showing cached prices — the exact amount is confirmed before you pay.',
+        'warn'
+      );
+    }
+  });
+
+  if (WW.configured) {
+    WW.auth.onAuthStateChanged(function (user) {
+      if (user) onSignedIn(user);
+    });
+  } else {
+    WW.notice(
+      pageNotice,
+      'Online purchases are not switched on yet. Please write to ' +
+        'support@whatworks.pro and we will activate Premium for you.',
+      'warn'
+    );
+  }
+
+  WW.initOtpForm(
+    {
+      phoneInput: 'phoneInput',
+      sendBtn: 'sendBtn',
+      otpRow: 'otpRow',
+      otpInput: 'otpInput',
+      verifyBtn: 'verifyBtn',
+      recaptcha: 'recaptcha',
+      notice: 'authNotice',
+    },
+    onSignedIn
+  );
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper: is user authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper: get current user's phone number from their user document.
+    // NOTE: Storage rules must use the cross-service firestore.get()/
+    // firestore.exists() functions — plain get() only exists in Firestore
+    // rules and makes every evaluation fail (deny).
+    function getCurrentUserPhone() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.phone;
+    }
+
+    // Helper: check if user is a participant in the task.
+    // Task docs are created fire-and-forget while attachments can upload
+    // immediately — if the doc hasn't landed yet, allow the authenticated
+    // upload instead of erroring out on a missing document.
+    function isTaskParticipant(taskId) {
+      return !firestore.exists(/databases/(default)/documents/tasks/$(taskId))
+             || isParticipantInTaskDoc(taskId);
+    }
+
+    function isParticipantInTaskDoc(taskId) {
+      let task = firestore.get(/databases/(default)/documents/tasks/$(taskId));
+      return task.data.createdBy == request.auth.uid
+             || task.data.assignedToUid == request.auth.uid
+             || (task.data.assignedToPhone != null && task.data.assignedToPhone == getCurrentUserPhone())
+             || (task.data.participants is list && task.data.participants.hasAny([request.auth.uid]))
+             || (task.data.extraFields is map
+                 && task.data.extraFields.assigneeUids is list
+                 && task.data.extraFields.assigneeUids.hasAny([request.auth.uid]));
+    }
+
+    // TASKS ATTACHMENTS
+    // Path: tasks/{taskId}/{folder}/{fileName}
+    // Folders: images, camera, files, voice
+    match /tasks/{taskId}/{allPaths=**} {
+
+      // Read: any authenticated task participant
+      allow read: if isAuthenticated() && isTaskParticipant(taskId);
+
+      // Upload/replace: any authenticated task participant, max 100 MB
+      allow create, update: if isAuthenticated()
+                            && isTaskParticipant(taskId)
+                            && request.resource.size < 100 * 1024 * 1024;
+
+      // Delete: recipients remove the server copy once everyone has
+      // downloaded (minimal-server policy — local copy is source of truth)
+      allow delete: if isAuthenticated() && isTaskParticipant(taskId);
+    }
+
+    // SALES ATTACHMENTS
+    // Path: sales/{enquiryId}/{folder}/{fileName}
+    match /sales/{enquiryId}/{allPaths=**} {
+
+      allow read: if isAuthenticated();
+
+      allow create, update: if isAuthenticated()
+                            && request.resource.size < 100 * 1024 * 1024;
+
+      allow delete: if isAuthenticated();
+    }
+
+    // PROFILE IMAGES
+    // Path: profile_images/{userId}.jpg
+    match /profile_images/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+                   && fileName == request.auth.uid + '.jpg'
+                   && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

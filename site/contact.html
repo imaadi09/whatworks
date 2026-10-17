@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Us — WhatWorks</title>
+<meta name="description" content="How to reach WhatWorks support, and our business address.">
+<link rel="icon" href="/assets/img/app-icon.png">
+<link rel="stylesheet" href="/assets/css/site.css?v=3">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-ico" src="/assets/img/app-icon.png" alt=""> WhatWorks</a>
+    <nav class="site">
+      <a href="/tasks">Tasks</a>
+      <a href="/sales">Sales</a>
+      <a href="/crm">CRM</a>
+      <a href="/upgrade">Pricing</a>
+      <a href="/help">Help</a>
+      <a href="/account">My Account</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1 class="page">Contact Us</h1>
+    <p class="updated">We read every message.</p>
+
+    <div class="card">
+      <h2>Support</h2>
+      <p>
+        Email <a href="mailto:support@whatworks.pro">support@whatworks.pro</a>.
+        We reply within [[SUPPORT_RESPONSE_DAYS]] working days.
+      </p>
+      <p class="small muted">
+        The fastest way to report a problem in the app is
+        <strong>Settings → Report a Bug</strong> — it fills in your app version,
+        device and account ID automatically, which usually saves a round trip.
+      </p>
+      <p>
+        <a class="btn" href="mailto:support@whatworks.pro">Email support</a>
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Payments and billing</h2>
+      <p>
+        For anything about a payment, include the payment ID or invoice number
+        from <a href="/account">My Account</a> and the mobile number on the
+        account. See also our <a href="/refund">Refund &amp; Cancellation
+        Policy</a>.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Business details</h2>
+      <p>
+        [[LEGAL_NAME]]<br>
+        [[BUSINESS_ADDRESS]]<br>
+        Phone: [[SUPPORT_PHONE]]<br>
+        Email: <a href="mailto:support@whatworks.pro">support@whatworks.pro</a><br>
+        <!-- Remove this line if you are not GST-registered. -->
+        GSTIN: [[GSTIN]]
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="links">
+      <a href="/help">Help</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/refund">Refunds</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="legal-name">
+      © <span id="year">2026</span> [[LEGAL_NAME]]. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

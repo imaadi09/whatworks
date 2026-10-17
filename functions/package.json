@@ -1,0 +1,16 @@
+{
+  "name": "whatworks-functions",
+  "description": "Cloud Functions for WhatWorks (attachment/message cleanup, org membership, message push notifications, Razorpay billing)",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "dependencies": {
+    "firebase-admin": "12.7.0",
+    "firebase-functions": "4.9.0",
+    "razorpay": "2.9.4",
+    "@google-cloud/firestore": "7.0.0",
+    "@google-cloud/storage": "7.0.0"
+  },
+  "private": true
+}

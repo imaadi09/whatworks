@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Account — WhatWorks</title>
+<meta name="description" content="Sign in with your mobile number to see your WhatWorks plan, expiry date and payment history.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/img/app-icon.png">
+<link rel="stylesheet" href="/assets/css/site.css?v=3">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/"><img class="brand-ico" src="/assets/img/app-icon.png" alt=""> WhatWorks</a>
+    <nav class="site">
+      <a href="/tasks">Tasks</a>
+      <a href="/sales">Sales</a>
+      <a href="/crm">CRM</a>
+      <a href="/upgrade">Pricing</a>
+      <a href="/help">Help</a>
+      <a href="/account" aria-current="page">My Account</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <h1 class="page">My Account</h1>
+    <p class="updated">Your plan and payment history.</p>
+
+    <div id="pageNotice" class="notice info hidden"></div>
+
+    <!-- Sign-in gate. The invoice list is read with the user's own session, so
+         the rules (payments read-own) are what protect it — not this page. -->
+    <div class="card" id="loginCard">
+      <h2>Sign in</h2>
+      <p class="muted small">
+        Enter the mobile number you use in the WhatWorks app. We will text you a
+        6-digit code.
+      </p>
+      <div class="field">
+        <label for="phoneInput">Mobile number</label>
+        <input id="phoneInput" type="tel" inputmode="numeric" autocomplete="tel"
+               placeholder="9876543210">
+        <div class="hint">Indian numbers get +91 automatically.</div>
+      </div>
+      <button class="btn" id="sendBtn" type="button">Send code</button>
+      <div id="otpRow" class="hidden" style="margin-top:16px">
+        <div class="field">
+          <label for="otpInput">6-digit code</label>
+          <input id="otpInput" type="text" inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" placeholder="______">
+        </div>
+        <button class="btn" id="verifyBtn" type="button">Verify</button>
+      </div>
+      <div id="authNotice" class="notice info hidden" style="margin-top:14px"></div>
+      <div id="recaptcha"></div>
+    </div>
+
+    <div class="card hidden" id="planCard">
+      <h2>Current plan</h2>
+      <div class="plan-head">
+        <span class="plan-name" id="planName">—</span>
+        <span class="pill" id="planPill">—</span>
+        <div class="plan-actions">
+          <a class="btn" href="/upgrade" id="planCta">Get Premium</a>
+          <button class="btn ghost" type="button" onclick="WW.signOut()">Sign out</button>
+        </div>
+      </div>
+      <p id="planDetail" class="muted" style="margin-bottom:4px">—</p>
+      <div id="moduleRows" style="margin-top:10px"></div>
+      <p class="small muted" id="signedInAs" style="margin-top:10px"></p>
+    </div>
+
+    <div class="card hidden" id="historyCard">
+      <h2>Payment history</h2>
+      <div id="historyBody">
+        <p class="muted small">Loading…</p>
+      </div>
+      <p class="small muted">
+        Need a GST invoice or a correction? Email
+        <a href="mailto:support@whatworks.pro">support@whatworks.pro</a> with the
+        invoice number.
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="links">
+      <a href="/help">Help</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/refund">Refunds</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <div class="legal-name">
+      © <span id="year">2026</span> [[LEGAL_NAME]]. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="/assets/js/firebase-init.js"></script>
+<script src="/assets/js/auth.js"></script>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Same list as the pricing page — one subscription per module, each with its
+// own plan type, upgrade date and expiry date.
+var MODULE_LABELS = {
+  task: 'Task Management',
+  sale: 'Sales',
+  crm: 'CRM',
+  inventory: 'Inventory',
+};
+var MODULE_ORDER = ['task', 'sale', 'crm', 'inventory'];
+var TIER_LABELS = { basic: 'Free', premium: 'Premium', business: 'Business', enterprise: 'Enterprise' };
+
+function tierLabel(t) {
+  return TIER_LABELS[t] || t || 'Free';
+}
+
+function moduleNames(modules) {
+  if (!modules || !modules.length) return '—';
+  return modules
+    .map(function (m) { return MODULE_LABELS[m] || m; })
+    .join(', ');
+}
+
+// One order can mix plans/durations across modules; prefer the item list.
+function planCell(d) {
+  var base = (d.planLabel || 'Premium') + (d.durationLabel ? ' · ' + d.durationLabel : '');
+  if (d.items && d.items.length) {
+    var keys = {};
+    d.items.forEach(function (i) { keys[i.planId + ':' + i.durationMonths] = 1; });
+    if (Object.keys(keys).length > 1) return 'Mixed — see modules';
+  }
+  return base;
+}
+
+function moduleDetail(d) {
+  if (d.items && d.items.length) {
+    return d.items
+      .map(function (i) {
+        return (MODULE_LABELS[i.module] || i.module) + ' (' +
+          (i.planLabel || i.planId) + ' · ' +
+          (i.durationLabel || i.durationMonths + ' mo') + ')';
+      })
+      .join(', ');
+  }
+  return moduleNames(d.modules);
+}
+
+(function () {
+  var pageNotice = document.getElementById('pageNotice');
+
+  function renderPlan(user) {
+    var pill = document.getElementById('planPill');
+    var name = document.getElementById('planName');
+    var detail = document.getElementById('planDetail');
+    var cta = document.getElementById('planCta');
+    var rows = document.getElementById('moduleRows');
+
+    WW.db.collection('users').doc(user.uid).get().then(function (snap) {
+      if (!snap.exists) {
+        name.textContent = 'Basic';
+        pill.className = 'pill pending';
+        pill.textContent = 'No account';
+        detail.textContent =
+          'We have no WhatWorks account for this number yet. Install the app and ' +
+          'sign in once, then come back here.';
+        return;
+      }
+      var d = snap.data();
+      var now = new Date();
+      var modulePlans = d.modulePlans || {};
+
+      // One row per module: each subscription keeps its own plan type,
+      // upgrade date and expiry date.
+      var body = '';
+      var best = null;
+      var bestRank = -1;
+      var rank = { basic: 0, premium: 1, business: 2, enterprise: 3 };
+      MODULE_ORDER.forEach(function (id) {
+        var e = modulePlans[id] || {};
+        var start = e.startDate ? e.startDate.toDate() : null;
+        var expiry = e.expiryDate ? e.expiryDate.toDate() : null;
+        var active = !!expiry && expiry > now && e.planType !== 'basic';
+        var type = active ? e.planType : 'basic';
+        if (active && (rank[type] || 0) > bestRank) {
+          bestRank = rank[type] || 0;
+          best = { type: type, expiry: expiry };
+        }
+        var statusP = active
+          ? '<span class="pill paid">Active</span>'
+          : expiry
+            ? '<span class="pill pending">Expired</span>'
+            : '<span class="pill pending">Free</span>';
+        body +=
+          '<tr>' +
+          '<td>' + MODULE_LABELS[id] + '</td>' +
+          '<td>' + tierLabel(type) + '</td>' +
+          '<td>' + (active && start ? WW.formatDate(start) : '—') + '</td>' +
+          '<td>' + (expiry ? WW.formatDate(expiry) : '—') + '</td>' +
+          '<td>' + statusP + '</td>' +
+          '</tr>';
+      });
+      rows.innerHTML =
+        '<table class="data"><thead><tr>' +
+        '<th>Module</th><th>Plan</th><th>Upgraded</th><th>Expires</th><th>Status</th>' +
+        '</tr></thead><tbody>' + body + '</tbody></table>';
+
+      if (best) {
+        name.textContent = tierLabel(best.type);
+        pill.className = 'pill paid';
+        pill.textContent = 'Active';
+        detail.textContent =
+          'No auto-renewal. Renewing an active module extends its expiry; ' +
+          'an expired module starts a fresh period from the day you pay.';
+        cta.textContent = 'Renew or add modules';
+      } else {
+        name.textContent = 'Free';
+        pill.className = 'pill pending';
+        pill.textContent = 'Free plan';
+        detail.textContent =
+          'You are on the free plan. Each module upgrades separately with its ' +
+          'own start and expiry date.';
+        cta.textContent = 'Get Premium';
+      }
+    }).catch(function (err) {
+      console.error('[WW] plan read failed', err);
+      detail.textContent = 'Could not read your plan. Please reload.';
+    });
+  }
+
+  function statusPill(status) {
+    if (status === 'paid') return '<span class="pill paid">Paid</span>';
+    if (status === 'failed') return '<span class="pill failed">Failed</span>';
+    return '<span class="pill pending">Pending</span>';
+  }
+
+  function renderHistory(user) {
+    var body = document.getElementById('historyBody');
+
+    // Needs the payments (uid, createdAt desc) composite index, and the rules
+    // require the uid filter — an unfiltered list is denied, not silently empty.
+    WW.db
+      .collection('payments')
+      .where('uid', '==', user.uid)
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get()
+      .then(function (snap) {
+        if (snap.empty) {
+          body.innerHTML =
+            '<p class="muted small">No payments yet.</p>';
+          return;
+        }
+        var rows = '';
+        snap.forEach(function (doc) {
+          var d = doc.data();
+          var when = d.paidAt || d.createdAt;
+          rows +=
+            '<tr>' +
+            '<td>' + (when ? WW.formatDate(when.toDate()) : '—') + '</td>' +
+            '<td>' + (d.invoiceNo || '—') + '</td>' +
+            '<td>' + planCell(d) + '</td>' +
+            '<td>' + moduleDetail(d) + '</td>' +
+            '<td class="num">' + WW.formatPaise(d.totalAmount) + '</td>' +
+            '<td>' + statusPill(d.status) + '</td>' +
+            '</tr>';
+        });
+        body.innerHTML =
+          '<table class="data"><thead><tr>' +
+          '<th>Date</th><th>Invoice</th><th>Plan</th><th>Modules</th>' +
+          '<th class="num">Amount</th><th>Status</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table>';
+      })
+      .catch(function (err) {
+        console.error('[WW] history read failed', err);
+        body.innerHTML =
+          '<p class="notice error">Could not load your payments. Please reload.</p>';
+      });
+  }
+
+  function onSignedIn(user) {
+    document.getElementById('loginCard').classList.add('hidden');
+    document.getElementById('planCard').classList.remove('hidden');
+    document.getElementById('historyCard').classList.remove('hidden');
+    document.getElementById('signedInAs').textContent =
+      'Signed in as ' + (user.phoneNumber || '');
+    renderPlan(user);
+    renderHistory(user);
+  }
+
+  if (WW.configured) {
+    WW.auth.onAuthStateChanged(function (user) {
+      if (user) onSignedIn(user);
+    });
+  } else {
+    WW.notice(
+      pageNotice,
+      'Account sign-in is not switched on yet. For anything about your plan or a ' +
+        'payment, email support@whatworks.pro.',
+      'warn'
+    );
+  }
+
+  WW.initOtpForm(
+    {
+      phoneInput: 'phoneInput',
+      sendBtn: 'sendBtn',
+      otpRow: 'otpRow',
+      otpInput: 'otpInput',
+      verifyBtn: 'verifyBtn',
+      recaptcha: 'recaptcha',
+      notice: 'authNotice',
+    },
+    onSignedIn
+  );
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Internet permission for Firebase and network calls -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Strip the Advertising ID permission that Firebase/Play Services
+         merges in transitively — the app shows no ads and must match the
+         Play Console data-safety declaration ("does not use advertising ID") -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+
+    <!-- Strip broad media permissions declared by the file_picker plugin —
+         every picker flow in the app uses the system document picker
+         (FileType.any / SAF) or the Android 13+ system photo picker
+         (image_picker), neither of which needs these. Required by Google
+         Play's photo and video permissions policy for API 33+. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:node="remove"/>
+    
+    <!-- Notification permission (Android 13+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Legacy-only WRITE for the pre-Android-10 fallback path of the public
+         backup storage channel (Download/WhatWorks). Android 10+ writes via
+         MediaStore need NO permission at all, so maxSdkVersion keeps this from
+         ever being requested on modern devices. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+    
+    <!-- Contacts permission for phonebook access. READ powers the contact
+         picker / phonebook name lookup; WRITE lets a task/enquiry customer be
+         saved to the device address book (CustomerCommsService.saveToContacts). -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    
+    <!-- Microphone permission for voice recording -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    
+    <!-- Camera permission for capturing photos -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <application
+        android:label="WhatWorks"
+        android:name="${applicationName}"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+        
+        <!-- Firebase reCAPTCHA configuration for invisible verification -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher package visibility (Android 11+): without these the
+             system hides browsers and mail apps from us, so opening the Help
+             Center / legal pages and the Report a Bug mail fails silently. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="http"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <!-- Existing SMS invite flow relies on this one -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
+        </intent>
+    </queries>
+</manifest>
